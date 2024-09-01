@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+import streamlit.components.v1 as components
 
 # OpenAIクライアントの初期化
 client = OpenAI(api_key=st.secrets["openai_api_key"])
@@ -9,35 +10,35 @@ def improve_prompt(original_prompt):
     あなたは専門的なプロンプトエンジニアです。与えられたプロンプトを分析し、以下のステップに従って改良してください：
 
     1. プロンプトの分析:
-      - プロンプトの主な目的を特定する
-      - 不足している情報や曖昧な部分を指摘する
+       - プロンプトの主な目的を特定する
+       - 不足している情報や曖昧な部分を指摘する
 
     2. 構造の改善:
-      - 必要に応じて、プロンプトを複数のセクションに分割する
-      - 各セクションに明確な見出しをつける（例：背景、タスク、制約条件、期待される出力）
+       - 必要に応じて、プロンプトを複数のセクションに分割する
+       - 各セクションに明確な見出しをつける（例：背景、タスク、制約条件、期待される出力）
 
     3. 具体性の追加:
-      - 抽象的な指示を具体的なものに置き換える
-      - 必要に応じて、例や参照を追加する
+       - 抽象的な指示を具体的なものに置き換える
+       - 必要に応じて、例や参照を追加する
 
     4. 文脈の強化:
-      - タスクの背景や重要性を説明する文脈情報を追加する
-      - 対象読者や使用目的を明確にする
+       - タスクの背景や重要性を説明する文脈情報を追加する
+       - 対象読者や使用目的を明確にする
 
     5. 出力形式の指定:
-      - 期待される回答の形式や構造を詳細に指定する
-      - 必要に応じて、出力例を提供する
+       - 期待される回答の形式や構造を詳細に指定する
+       - 必要に応じて、出力例を提供する
 
     6. 制約条件の明確化:
-      - タスクに関連する制限事項や条件を明確に述べる
-      - 倫理的考慮事項や注意点を含める
+       - タスクに関連する制限事項や条件を明確に述べる
+       - 倫理的考慮事項や注意点を含める
 
     7. インタラクティブ要素の追加:
-      - ユーザーに追加情報を求める指示を含める（例：【ここに具体的な例を挿入してください】）
+       - ユーザーに追加情報を求める指示を含める（例：【ここに具体的な例を挿入してください】）
 
     8. 最終チェック:
-      - 改良されたプロンプトが元の意図を保持しているか確認する
-      - 簡潔さと詳細さのバランスを取る
+       - 改良されたプロンプトが元の意図を保持しているか確認する
+       - 簡潔さと詳細さのバランスを取る
 
     改良したプロンプトを提示する際は、以下の形式で回答してください：
 
@@ -64,7 +65,20 @@ def improve_prompt(original_prompt):
 
     return response.choices[0].message.content
 
-# アプリケーションのUI部分は変更なし
+# クリップボードにコピーするJavaScript関数
+def get_clipboard_js():
+    return """
+    <script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('プロンプトをクリップボードにコピーしました！');
+        }, function(err) {
+            alert('クリップボードへのコピーに失敗しました: ' + err);
+        });
+    }
+    </script>
+    """
+
 st.title("プロンプト改良アプリ")
 
 original_prompt = st.text_area("改良したいプロンプトを入力してください：")
@@ -72,7 +86,22 @@ original_prompt = st.text_area("改良したいプロンプトを入力してく
 if st.button("プロンプトを改良"):
     if original_prompt:
         improved_prompt = improve_prompt(original_prompt)
+        st.subheader("改良されたプロンプト：")
         st.write(improved_prompt)
+        
+        # 改良されたプロンプトのみを抽出
+        improved_prompt_only = improved_prompt.split("改良されたプロンプト：")[1].split("改善点の説明：")[0].strip()
+        
+        # クリップボードにコピーするボタンを追加
+        st.markdown(get_clipboard_js(), unsafe_allow_html=True)
+        st.button("改良されたプロンプトをクリップボードにコピー", on_click=lambda: st.components.v1.html(
+            f"""
+            <script>
+            copyToClipboard(`{improved_prompt_only.replace("`", "\\`").replace("'", "\\'").replace('"', '\\"')}`)
+            </script>
+            """,
+            height=0
+        ))
     else:
         st.warning("プロンプトを入力してください。")
 
@@ -81,5 +110,6 @@ st.sidebar.write("""
 1. 改良したいプロンプトを入力欄に貼り付けます。
 2. 「プロンプトを改良」ボタンをクリックします。
 3. AIが改良したプロンプトと改善点の説明が表示されます。
-4. 提案された改善点を参考に、必要に応じてプロンプトを編集してください。
+4. 「改良されたプロンプトをクリップボードにコピー」ボタンをクリックして、改良されたプロンプトをコピーできます。
+5. 必要に応じて、提案された改善点を参考にプロンプトを編集してください。
 """)
