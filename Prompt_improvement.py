@@ -72,7 +72,6 @@ original_prompt = st.text_area("改良したいプロンプトを入力してく
 if st.button("プロンプトを改良"):
     if original_prompt:
         improved_prompt = improve_prompt(original_prompt)
-        st.subheader("改良されたプロンプト：")
         st.write(improved_prompt)
     else:
         st.warning("プロンプトを入力してください。")
