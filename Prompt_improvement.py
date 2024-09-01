@@ -1,9 +1,8 @@
 import streamlit as st
-import openai
-import os
+from openai import OpenAI
 
-# Streamlit Cloudの環境変数からAPIキーを取得
-openai.api_key = st.secrets["openai_api_key"]
+# OpenAIクライアントの初期化
+client = OpenAI(api_key=st.secrets["openai_api_key"])
 
 def improve_prompt(original_prompt):
     system_message = """
@@ -18,7 +17,7 @@ def improve_prompt(original_prompt):
     改良する際は、完全な文言だけでなく、例えば【ここに具体的な例を挿入してください】のように、ユーザーに修正を促す箇所も含めてください。
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": system_message},
@@ -28,8 +27,9 @@ def improve_prompt(original_prompt):
         temperature=0.5
     )
 
-    return response.choices[0].message['content']
+    return response.choices[0].message.content
 
+# アプリケーションのUI部分は変更なし
 st.title("プロンプト改良アプリ")
 
 original_prompt = st.text_area("改良したいプロンプトを入力してください：")
