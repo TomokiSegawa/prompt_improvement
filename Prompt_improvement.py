@@ -1,6 +1,5 @@
 import streamlit as st
 from openai import OpenAI
-import streamlit.components.v1 as components
 
 # OpenAIクライアントの初期化
 client = OpenAI(api_key=st.secrets["openai_api_key"])
@@ -65,20 +64,6 @@ def improve_prompt(original_prompt):
 
     return response.choices[0].message.content
 
-# クリップボードにコピーするJavaScript関数
-def get_clipboard_js():
-    return """
-    <script>
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function() {
-            alert('プロンプトをクリップボードにコピーしました！');
-        }, function(err) {
-            alert('クリップボードへのコピーに失敗しました: ' + err);
-        });
-    }
-    </script>
-    """
-
 st.title("プロンプト改良アプリ")
 
 original_prompt = st.text_area("改良したいプロンプトを入力してください：")
@@ -86,22 +71,14 @@ original_prompt = st.text_area("改良したいプロンプトを入力してく
 if st.button("プロンプトを改良"):
     if original_prompt:
         improved_prompt = improve_prompt(original_prompt)
-        st.subheader("改良されたプロンプト：")
         st.write(improved_prompt)
         
         # 改良されたプロンプトのみを抽出
         improved_prompt_only = improved_prompt.split("改良されたプロンプト：")[1].split("改善点の説明：")[0].strip()
         
-        # クリップボードにコピーするボタンを追加
-        st.markdown(get_clipboard_js(), unsafe_allow_html=True)
-        st.button("改良されたプロンプトをクリップボードにコピー", on_click=lambda: st.components.v1.html(
-            f"""
-            <script>
-            copyToClipboard(`{improved_prompt_only.replace("`", "\\`").replace("'", "\\'").replace('"', '\\"')}`)
-            </script>
-            """,
-            height=0
-        ))
+        # コピー用のテキストエリアを追加
+        st.text_area("以下のテキストをコピーしてください（Ctrl+C または Cmd+C）:", value=improved_prompt_only, height=200)
+        
     else:
         st.warning("プロンプトを入力してください。")
 
@@ -110,6 +87,6 @@ st.sidebar.write("""
 1. 改良したいプロンプトを入力欄に貼り付けます。
 2. 「プロンプトを改良」ボタンをクリックします。
 3. AIが改良したプロンプトと改善点の説明が表示されます。
-4. 「改良されたプロンプトをクリップボードにコピー」ボタンをクリックして、改良されたプロンプトをコピーできます。
-5. 必要に応じて、提案された改善点を参考にプロンプトを編集してください。
+4. 改良されたプロンプトは、専用のテキストエリアに表示されます。このテキストを選択してコピーしてください。
+5. 必要に応じて、提案された改善点を参考にプロンプトをさらに編集してください。
 """)
